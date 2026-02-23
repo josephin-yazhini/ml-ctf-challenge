@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - ML CTF Challenge{% endblock %}
+
+{% block extra_css %}
+<style>
+    .user-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    
+    .progress-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+        margin: 2rem 0;
+    }
+    
+    .progress-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        border-left: 5px solid #667eea;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s;
+    }
+    
+    .progress-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .progress-card h3 {
+        margin-bottom: 1rem;
+        color: #333;
+    }
+    
+    .progress-bar {
+        width: 100%;
+        height: 25px;
+        background: #e0e0e0;
+        border-radius: 15px;
+        overflow: hidden;
+        margin: 1rem 0;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 0.85rem;
+        transition: width 0.3s;
+    }
+    
+    .challenge-link {
+        display: inline-block;
+        margin-top: 1rem;
+        padding: 0.75rem 1.5rem;
+        background: #667eea;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .challenge-link:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 1rem;">📊 Your Dashboard</h1>
+
+<div class="user-stats">
+    <div class="stat-card">
+        <div class="stat-number">{{ current_user.total_points }}</div>
+        <div class="stat-label">Total Points</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" id="completedCount">0</div>
+        <div class="stat-label">Challenges Completed</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" id="flagCount">0</div>
+        <div class="stat-label">Flags Captured</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ (current_user.total_points / 500 * 100)|int }}%</div>
+        <div class="stat-label">Overall Progress</div>
+    </div>
+</div>
+
+<h2 style="margin: 2rem 0 1rem 0;">Challenge Progress</h2>
+
+<div class="progress-grid">
+    {% for challenge in challenges %}
+    <div class="progress-card">
+        <h3>{{ challenge.title }}</h3>
+        <p><strong>Difficulty:</strong> {{ challenge.difficulty }}</p>
+        <p><strong>Flags:</strong> {{ progress[challenge.id].completed_flags }}/{{ progress[challenge.id].total_flags }}</p>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ (progress[challenge.id].completed_flags / progress[challenge.id].total_flags * 100)|int }}%">
+                {{ (progress[challenge.id].completed_flags / progress[challenge.id].total_flags * 100)|int }}%
+            </div>
+        </div>
+        
+        <p><strong>Points:</strong> {{ progress[challenge.id].points_earned }}/{{ progress[challenge.id].total_possible }}</p>
+        
+        <a href="{{ url_for('challenges.view_challenge', challenge_id=challenge.id) }}" class="challenge-link">
+            {% if progress[challenge.id].completed_flags == progress[challenge.id].total_flags %}
+                ✓ Completed
+            {% else %}
+                Continue
+            {% endif %}
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+// Calculate stats
+const challenges = {{ challenges|length|tojson }};
+let completedChallenges = 0;
+let totalFlags = 0;
+
+{% for challenge in challenges %}
+const progress{{ challenge.id }} = {{ progress[challenge.id]|tojson }};
+if (progress{{ challenge.id }}.completed_flags === progress{{ challenge.id }}.total_flags) {
+    completedChallenges++;
+}
+totalFlags += progress{{ challenge.id }}.completed_flags;
+{% endfor %}
+
+document.getElementById('completedCount').textContent = completedChallenges;
+document.getElementById('flagCount').textContent = totalFlags;
+</script>
+
+{% endblock %}

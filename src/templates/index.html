@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}ML CTF Challenge - Team Kernels{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero">
+    <h1>ML CTF Challenge</h1>
+    <p>Master machine learning security through real-world challenges</p>
+    
+    <a href="{{ url_for('challenges.list_challenges') }}" class="btn btn-primary">Start Challenge</a>
+</div>
+
+{% endblock %}

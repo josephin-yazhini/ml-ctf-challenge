@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Register - ML CTF Challenge{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        max-width: 500px;
+        margin: 3rem auto;
+        background: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+    
+    .auth-container h1 {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: #333;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 5px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+    
+    .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .password-requirements {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 5px;
+        margin: 1rem 0 1.5rem 0;
+        font-size: 0.9rem;
+        color: #666;
+    }
+    
+    .password-requirements h4 {
+        margin-bottom: 0.5rem;
+    }
+    
+    .password-requirements li {
+        margin-bottom: 0.25rem;
+    }
+    
+    .requirement {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .requirement-check {
+        color: #e74c3c;
+    }
+    
+    .requirement-check.met {
+        color: #27ae60;
+    }
+    
+    .submit-btn {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .submit-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .auth-link {
+        text-align: center;
+        margin-top: 1.5rem;
+        color: #666;
+    }
+    
+    .auth-link a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .auth-link a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h1>Create Account</h1>
+    
+    <form method="POST" action="/auth/register" id="registerForm">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required placeholder="Choose a username (min. 3 characters)">
+        </div>
+        
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required placeholder="Enter your email">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required placeholder="Create a strong password">
+            
+            <div class="password-requirements">
+                <h4>Password Requirements:</h4>
+                <ul>
+                    <li><span class="requirement">
+                        <span class="requirement-check" id="check-length">✗</span>
+                        At least 8 characters
+                    </span></li>
+                    <li><span class="requirement">
+                        <span class="requirement-check" id="check-uppercase">✗</span>
+                        At least one uppercase letter
+                    </span></li>
+                    <li><span class="requirement">
+                        <span class="requirement-check" id="check-number">✗</span>
+                        At least one number
+                    </span></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="confirm-password">Confirm Password</label>
+            <input type="password" id="confirm-password" name="confirm-password" required placeholder="Confirm your password">
+        </div>
+        
+        <button type="submit" class="submit-btn" id="submitBtn" disabled>Create Account</button>
+    </form>
+    
+    <div class="auth-link">
+        Already have an account? <a href="{{ url_for('auth.login') }}">Sign in here</a>
+    </div>
+</div>
+
+<script>
+const password = document.getElementById('password');
+const confirmPassword = document.getElementById('confirm-password');
+const submitBtn = document.getElementById('submitBtn');
+
+// Check password requirements
+password.addEventListener('input', () => {
+    const value = password.value;
+    
+    document.getElementById('check-length').textContent = value.length >= 8 ? '✓' : '✗';
+    document.getElementById('check-length').classList.toggle('met', value.length >= 8);
+    
+    document.getElementById('check-uppercase').textContent = /[A-Z]/.test(value) ? '✓' : '✗';
+    document.getElementById('check-uppercase').classList.toggle('met', /[A-Z]/.test(value));
+    
+    document.getElementById('check-number').textContent = /[0-9]/.test(value) ? '✓' : '✗';
+    document.getElementById('check-number').classList.toggle('met', /[0-9]/.test(value));
+    
+    updateSubmitButton();
+});
+
+confirmPassword.addEventListener('input', updateSubmitButton);
+
+function updateSubmitButton() {
+    const hasValidPassword = 
+        password.value.length >= 8 &&
+        /[A-Z]/.test(password.value) &&
+        /[0-9]/.test(password.value);
+    const passwordsMatch = password.value === confirmPassword.value && password.value;
+    
+    submitBtn.disabled = !(hasValidPassword && passwordsMatch);
+}
+
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value;
+    const email = document.getElementById('email').value;
+    const password_val = document.getElementById('password').value;
+    
+    try {
+        const response = await fetch('/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, email, password: password_val })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Registration successful! Please login.');
+            window.location.href = '/auth/login';
+        } else {
+            alert(data.message);
+        }
+    } catch (error) {
+        alert('Error registering');
+        console.error(error);
+    }
+});
+</script>
+
+{% endblock %}

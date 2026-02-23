@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block title %}{{ challenge.title }} - ML CTF Challenge{% endblock %}
+
+{% block extra_css %}
+<style>
+    .challenge-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    
+    .challenge-title {
+        margin: 0 0 1rem 0;
+        font-size: 2rem;
+    }
+    
+    .challenge-meta {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .badge-easy { background: #27ae60; }
+    .badge-medium { background: #f39c12; }
+    .badge-hard { background: #e74c3c; }
+    .badge-expert { background: #8e44ad; }
+    
+    .progress-section {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    
+    .progress-bar {
+        width: 100%;
+        height: 30px;
+        background: #e0e0e0;
+        border-radius: 15px;
+        overflow: hidden;
+        margin: 1rem 0;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        transition: width 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+    }
+    
+    .flags-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+    
+    .flag-card {
+        background: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 1.5rem;
+        transition: all 0.3s;
+    }
+    
+    .flag-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+    }
+    
+    .flag-card h4 {
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+    
+    .flag-input {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .flag-input .flag-input-field {
+        flex: 1;
+        min-width: 0;
+        padding: 0.75rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 5px;
+        font-family: 'Courier New', monospace;
+        transition: border-color 0.3s;
+    }
+    
+    .flag-input .flag-input-field:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .flag-submit-btn {
+        min-width: 112px;
+        padding: 0.75rem 1rem;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .flag-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+        font-weight: 600;
+    }
+    
+    .status-completed {
+        color: #27ae60;
+    }
+    
+    .status-pending {
+        color: #f39c12;
+    }
+    
+    .download-section {
+        background: #f8f9fa;
+        padding: 2rem;
+        border-radius: 10px;
+        margin: 2rem 0;
+        text-align: center;
+    }
+    
+    .download-btn {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .download-btn:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .message {
+        padding: 1rem;
+        border-radius: 5px;
+        margin-bottom: 1rem;
+    }
+    
+    .message-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .message-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    @media (max-width: 600px) {
+        .flag-input {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .flag-submit-btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="challenge-header">
+    <h1 class="challenge-title">{{ challenge.title }}</h1>
+    <div class="challenge-meta">
+        <div class="meta-item">
+            <span class="badge badge-{{ challenge.difficulty.lower() }}">{{ challenge.difficulty }}</span>
+        </div>
+        <div class="meta-item">
+            📁 {{ challenge.category }}
+        </div>
+        <div class="meta-item">
+            ⭐ {{ challenge.total_points }} Points ({{ challenge.flags|length }} Flags)
+        </div>
+    </div>
+</div>
+
+{% if current_user.is_authenticated %}
+<div class="progress-section">
+    <h3>Your Progress</h3>
+    <p>{{ progress.completed_flags }}/{{ progress.total_flags }} Flags Approved</p>
+    <p>Pending Approval: {{ progress.pending_flags }}</p>
+    <div class="progress-bar">
+        <div class="progress-fill" style="width: {{ (progress.completed_flags / progress.total_flags * 100)|int }}%">
+            {{ (progress.completed_flags / progress.total_flags * 100)|int }}%
+        </div>
+    </div>
+    <p><strong>Approved Points:</strong> {{ progress.points_earned }}/{{ progress.total_possible }}</p>
+</div>
+{% else %}
+<div style="background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; padding: 1rem; border-radius: 5px; margin-bottom: 2rem;">
+    <strong>💡 Tip:</strong> <a href="{{ url_for('auth.login') }}">Login</a> to submit flags and earn points!
+</div>
+{% endif %}
+
+<h2>Challenge Description</h2>
+<p style="font-size: 1.1rem; line-height: 1.6; color: #555;">{{ challenge.description }}</p>
+
+<div class="download-section">
+    {% if resources %}
+    <h3>Download Challenge Files</h3>
+    <p>Download only the official resources from the linked GitHub challenge:</p>
+    <div style="display: flex; flex-direction: column; gap: 0.75rem; align-items: center;">
+        {% for resource in resources %}
+        <a href="{{ url_for('api.download_challenge_resource', challenge_id=challenge.id, filename=resource.local_name) }}" class="download-btn">
+            Download {{ resource.display_name }}
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No files available for download for this challenge.</p>
+    {% endif %}
+</div>
+
+<h2>Final Flag Verification</h2>
+<div id="messages"></div>
+
+<div class="flags-container">
+    {% for flag in challenge.flags %}
+    <div class="flag-card">
+        <h4>Flag {{ flag.flag_order }}</h4>
+        <p><strong>Points:</strong> {{ flag.points_value }}</p>
+        {% if flag.description %}
+        <p><strong>Hint:</strong> {{ flag.description }}</p>
+        {% endif %}
+        
+        {% if current_user.is_authenticated %}
+        <div class="flag-input">
+            <input type="text" class="flag-input-field" placeholder="Enter flag..." data-flag-id="{{ flag.flag_order }}" data-challenge-id="{{ challenge.id }}">
+            <button class="btn btn-primary flag-submit-btn" onclick="submitFlag({{ flag.flag_order }}, {{ challenge.id }})">Submit</button>
+        </div>
+        <div id="status-{{ flag.flag_order }}" class="flag-status"></div>
+        {% else %}
+        <p><em><a href="{{ url_for('auth.login') }}">Login</a> to submit this flag</em></p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+{% if current_user.is_authenticated %}
+<script>
+async function submitFlag(flagOrder, challengeId) {
+    const input = document.querySelector(`input[data-flag-id="${flagOrder}"]`);
+    const flagValue = input.value.trim();
+    const statusDiv = document.getElementById(`status-${flagOrder}`);
+    const messagesDiv = document.getElementById('messages');
+    
+    if (!flagValue) {
+        statusDiv.innerHTML = '<span style="color: #e74c3c;">⚠️ Please enter a flag</span>';
+        return;
+    }
+    
+    try {
+        statusDiv.innerHTML = '<span style="color: #666;">⏳ Checking...</span>';
+        
+        const response = await fetch(`/api/challenges/${challengeId}/flags/${flagOrder}/submit`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                flag: flagValue
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            statusDiv.innerHTML = '<span class="status-completed">Submitted. Pending admin approval.</span>';
+            messagesDiv.innerHTML = '<div class="message message-success">' + data.message + '</div>';
+            input.disabled = true;
+            input.style.background = '#e8f5e9';
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            statusDiv.innerHTML = '<span class="status-pending">Incorrect</span>';
+            messagesDiv.innerHTML = '<div class="message message-error">' + data.message + '</div>';
+        }
+    } catch (error) {
+        statusDiv.innerHTML = '<span style="color: #e74c3c;">❌ Error submitting flag</span>';
+        console.error('Error:', error);
+    }
+}
+
+// Allow Enter key to submit
+document.addEventListener('keypress', function(event) {
+    if (event.key === 'Enter' && event.target.classList.contains('flag-input-field')) {
+        const flagId = event.target.getAttribute('data-flag-id');
+        const challengeId = event.target.getAttribute('data-challenge-id');
+        submitFlag(flagId, challengeId);
+    }
+});
+</script>
+{% endif %}
+
+{% endblock %}

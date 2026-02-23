@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Leaderboard - ML CTF Challenge{% endblock %}
+
+{% block extra_css %}
+<style>
+    .leaderboard-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 2rem 0;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .leaderboard-table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .leaderboard-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+    }
+    
+    .leaderboard-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .leaderboard-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+    
+    .leaderboard-table tbody tr:nth-child(1) {
+        background: linear-gradient(to right, rgba(255, 215, 0, 0.1), transparent);
+        border-left: 5px solid #ffd700;
+    }
+    
+    .leaderboard-table tbody tr:nth-child(2) {
+        background: linear-gradient(to right, rgba(192, 192, 192, 0.1), transparent);
+        border-left: 5px solid #c0c0c0;
+    }
+    
+    .leaderboard-table tbody tr:nth-child(3) {
+        background: linear-gradient(to right, rgba(205, 127, 50, 0.1), transparent);
+        border-left: 5px solid #cd7f32;
+    }
+    
+    .rank-badge {
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        background: #667eea;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+    
+    .rank-1 { background: #ffd700; color: #333; }
+    .rank-2 { background: #c0c0c0; color: #333; }
+    .rank-3 { background: #cd7f32; color: white; }
+    
+    .username {
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .points {
+        font-weight: 700;
+        color: #667eea;
+        font-size: 1.1rem;
+    }
+    
+    .filter-section {
+        margin-bottom: 2rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .filter-btn {
+        padding: 0.5rem 1rem;
+        border: 2px solid #667eea;
+        background: white;
+        color: #667eea;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .filter-btn.active {
+        background: #667eea;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 2rem;">Global Leaderboard</h1>
+
+<div id="leaderboardContainer">
+    <div class="spinner"></div>
+</div>
+
+<script>
+async function loadLeaderboard() {
+    try {
+        const response = await fetch('/api/leaderboard');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayLeaderboard(data.leaderboard);
+        } else if (data.message === 'Leaderboard is private') {
+            document.getElementById('leaderboardContainer').innerHTML = 
+                '<p style="color: #667eea; font-size: 1.1rem; text-align: center; padding: 2rem;">The leaderboard is currently private and not visible.</p>';
+        } else {
+            document.getElementById('leaderboardContainer').innerHTML = 
+                '<p style="color: #e74c3c;">Failed to load leaderboard</p>';
+        }
+    } catch (error) {
+        console.error('Error loading leaderboard:', error);
+        document.getElementById('leaderboardContainer').innerHTML = 
+            '<p style="color: #e74c3c;">Failed to load leaderboard</p>';
+    }
+}
+
+function displayLeaderboard(leaderboard) {
+    const container = document.getElementById('leaderboardContainer');
+    
+    let html = `<table class="leaderboard-table">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Username</th>
+                <th>Points</th>
+                <th>Challenges Completed</th>
+                <th>Joined</th>
+            </tr>
+        </thead>
+        <tbody>`;
+    
+    leaderboard.forEach(entry => {
+        const rankClass = entry.rank <= 3 ? `rank-${entry.rank}` : '';
+        const joinDate = new Date(entry.joined_at).toLocaleDateString();
+        
+        html += `<tr>
+            <td><span class="rank-badge ${rankClass}">${entry.rank}</span></td>
+            <td><span class="username">${entry.username}</span></td>
+            <td><span class="points">${entry.total_points}</span></td>
+            <td>${entry.challenges_completed}</td>
+            <td>${joinDate}</td>
+        </tr>`;
+    });
+    
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+// Load leaderboard on page load
+loadLeaderboard();
+
+// Refresh every 30 seconds
+setInterval(loadLeaderboard, 30000);
+</script>
+
+{% endblock %}

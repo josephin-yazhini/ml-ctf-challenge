@@ -1,0 +1,125 @@
+{% extends "base_new.html" %}
+
+{% block title %}Leaderboard - Gatekeeper CTF{% endblock %}
+
+{% block content %}
+<style>
+    .leaderboard-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .leaderboard-table thead {
+        background: #f3f4f6;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .leaderboard-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--dark);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .leaderboard-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .leaderboard-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .leaderboard-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .rank {
+        font-weight: 700;
+        color: var(--primary);
+        font-size: 1.1rem;
+    }
+
+    .rank-1 { font-size: 1.3rem; color: #fbbf24; }
+    .rank-2 { font-size: 1.2rem; color: #a8a29e; }
+    .rank-3 { font-size: 1.1rem; color: #d97706; }
+
+    .username {
+        font-weight: 600;
+        color: var(--dark);
+    }
+
+    .points {
+        font-weight: 700;
+        color: var(--primary);
+        font-size: 1rem;
+    }
+
+    .challenges-solved {
+        color: var(--text-light);
+        font-size: 0.9rem;
+    }
+
+    h1 {
+        color: var(--dark);
+        margin-bottom: 2rem;
+    }
+
+    .leaderboard-info {
+        padding: 1rem;
+        background: #f0f9ff;
+        border-left: 3px solid var(--primary);
+        border-radius: 4px;
+        margin-bottom: 2rem;
+        color: var(--text);
+        font-size: 0.9rem;
+    }
+</style>
+
+<h1>Leaderboard</h1>
+
+<div class="leaderboard-info">
+    Global rankings updated in real-time. Complete challenges to earn points and climb the ranks.
+</div>
+
+<div class="content">
+    <table class="leaderboard-table">
+        <thead>
+            <tr>
+                <th style="width: 60px;">Rank</th>
+                <th>Player</th>
+                <th style="width: 120px;">Points</th>
+                <th style="width: 150px;">Challenges</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in leaderboard %}
+                <tr>
+                    <td class="rank rank-{{ loop.index if loop.index <= 3 else '' }}">
+                        {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}{% endif %}
+                    </td>
+                    <td class="username">{{ user.username }}</td>
+                    <td class="points">{{ user.total_points }}</td>
+                    <td class="challenges-solved">
+                        {{ user.submissions|selectattr('is_correct')|list|unique|length }} / 4
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Auto-refresh leaderboard every 30 seconds
+    setInterval(function() {
+        location.reload();
+    }, 30000);
+</script>
+{% endblock %}

@@ -1,0 +1,11 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Blue Q Shape -->
+  <g fill="none" stroke="#0071e3" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer circle -->
+    <circle cx="90" cy="90" r="60"/>
+    <!-- Inner opening -->
+    <circle cx="90" cy="90" r="35" fill="white"/>
+    <!-- Tail -->
+    <path d="M 115 115 L 140 140" stroke-width="14"/>
+  </g>
+</svg>

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}All Challenges - ML CTF Challenge{% endblock %}
+
+{% block extra_css %}
+<style>
+    .challenges-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+        margin: 2rem 0;
+    }
+    
+    .challenge-card {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s;
+        border-left: 5px solid #667eea;
+    }
+    
+    .challenge-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+    }
+    
+    .card-header h3 {
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    .card-footer {
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .difficulty-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        color: white;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+    
+    .diff-easy { background: #27ae60; }
+    .diff-medium { background: #f39c12; }
+    .diff-hard { background: #e74c3c; }
+    .diff-expert { background: #8e44ad; }
+    
+    .points-badge {
+        background: #667eea;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 2rem;">🎯 All Challenges</h1>
+
+<div class="challenges-grid">
+    {% for challenge in challenges %}
+    <div class="challenge-card">
+        <div class="card-header">
+            <h3>{{ challenge.title }}</h3>
+            <span class="difficulty-badge diff-{{ challenge.difficulty.lower() }}">{{ challenge.difficulty }}</span>
+        </div>
+        
+        <div class="card-body">
+            <p><strong>Category:</strong> {{ challenge.category }}</p>
+            <p><strong>Flags:</strong> {{ challenge.flags_count }}</p>
+            
+            {% if current_user.is_authenticated and challenge.user_progress %}
+            <div style="background: #f0f4ff; padding: 1rem; border-radius: 5px; margin: 1rem 0;">
+                <p><strong>Your Progress:</strong> {{ challenge.user_progress.completed_flags }}/{{ challenge.user_progress.total_flags }} approved flags</p>
+                <p><strong>Pending:</strong> {{ challenge.user_progress.pending_flags }} flags</p>
+                <p><strong>Approved Points:</strong> {{ challenge.user_progress.points_earned }}/{{ challenge.user_progress.total_possible }}</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="card-footer">
+            <span class="points-badge">{{ challenge.total_points }} pts</span>
+            <a href="{{ url_for('challenges.view_challenge', challenge_id=challenge.id) }}" class="btn btn-primary">Start</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not challenges %}
+<p style="text-align: center; color: #999;">No challenges available yet.</p>
+{% endif %}
+
+{% endblock %}
